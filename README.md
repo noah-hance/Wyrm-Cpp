@@ -38,7 +38,7 @@ After you successfully set up the project following the steps below and get thin
 - `include/` + `src/`: common C++ project layout that clearly splits declarations (`.h`) and implementation (`.cpp`), which keeps compile boundaries and file responsibilities clear. Learn more: [YouTube: C++ headers and source files for beginners](https://www.youtube.com/results?search_query=c%2B%2B+header+files+and+source+files+for+beginners).
 - `main.cpp` + `App` class: `main` is the automatic C++ entry point the OS/runtime calls when your executable starts, so we keep it tiny and move game behavior into `App`. Learn more: [YouTube: C++ main function explained for beginners](https://www.youtube.com/results?search_query=c%2B%2B+main+function+explained+for+beginners).
 - generator scripts: quick setup for Visual Studio and cross-platform terminals.
-- `.clang-format` and `.clang-tidy`: enforces consistent style and static analysis: [Setup VS For Auto Tidy/Format](https://learn.microsoft.com/en-us/cpp/code-quality/clang-tidy?view=msvc-170)
+- `.clang-format` and `.clang-tidy`: enforces consistent style and static analysis.
 
 ## Setup
 
@@ -46,7 +46,10 @@ Requirements:
 - [CMake 3.20+](https://cmake.org/cmake/help/latest/guide/tutorial/index.html)
 - C++17 compiler
 - [raylib](https://www.raylib.com/) (the project fetches it automatically if not found locally)
-- Git (needed when raylib is fetched from source)
+- [Git](https://git-scm.com/install/) (needed when raylib is fetched from source)
+
+Suggested:
+- [Clang For Visual Studio](https://learn.microsoft.com/en-us/cpp/code-quality/clang-tidy?view=msvc-170)
 
 Generate and build:
 
