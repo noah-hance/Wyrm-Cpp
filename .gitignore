@@ -1,0 +1,73 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+*.pc
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.out
+*.app
+
+# IDE
+.idea/
+.vs/
+.vscode/
+.cache/
+
+# Solution Files
+*.vcxproj
+*.filters
+*.user
+*.sln
+packages/
+_vsproj/
+
+# Testing
+Testing/
+
+# Build
+Build/
+Generated/
+bin/
+obj/
+_build/
+x64/
+*.tlog
+compileData.scor
+compileData.scor.gbl
+compileData.scor.t0000
+compile_commands.json
+
+# CMake
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Makefile
+*.recipe
+*.dir
