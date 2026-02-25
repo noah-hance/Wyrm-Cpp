@@ -16,7 +16,7 @@ if not exist "%BUILD_DIR%" (
 )
 
 echo [1/2] Configuring CMake project for Visual Studio 2022...
-cmake -S . -B "%BUILD_DIR%" -G "Visual Studio 17 2022"
+cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -S . -B "%BUILD_DIR%" -G "Visual Studio 17 2022"
 if errorlevel 1 (
     echo.
     echo CMake configure failed.

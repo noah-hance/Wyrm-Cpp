@@ -8,11 +8,15 @@ namespace HardestGame
         , _windowHeight(windowHeight)
         , _windowTitle(windowTitle)
         // Rectangle is {x, y, width, height}.
-        , _player{80.0f, static_cast<float>(windowHeight) / 2.0f, 40.0f, 40.0f}
+        , _player {80.0f, static_cast<float>(windowHeight) / 2.0f, 40.0f, 40.0f}
         , _moveSpeed(220.0f)
+        , _obstacle(
+              std::make_unique<Rectangle>(
+                  Rectangle {430.0f, static_cast<float>(windowHeight) - 120.0f, 45.0f, 50.0f}))
+        , _deathCount(std::make_unique<int>(0))
     {
         // Open the window using the config passed from main().
-        InitWindow(_windowWidth, _windowHeight, _windowTitle);
+        InitWindow(_windowWidth, _windowHeight, _windowTitle.c_str());
 
         // 60 FPS is a common beginner-friendly target.
         SetTargetFPS(60);
@@ -26,6 +30,9 @@ namespace HardestGame
 
     void App::Run()
     {
+        Rectangle& player = _player;
+        Rectangle& obstacle = *_obstacle;
+
         // Main loop continues until the user closes the window.
         while (!WindowShouldClose())
         {
@@ -41,6 +48,14 @@ namespace HardestGame
             Draw();
             // Present the frame to the screen.
             EndDrawing();
+
+            // int* leakedCounter = new int(42);
+            //*leakedCounter += 1;
+            // delete leakedCounter;
+
+            // char* leakedBlock = new char[1024 * 1024]; // 1mb / frame
+            // leakedBlock[0] = 1;
+            // delete[] leakedBlock;
         }
     }
 
@@ -85,6 +100,13 @@ namespace HardestGame
             // Clamp to the bottom edge.
             _player.y = static_cast<float>(_windowHeight) - _player.height;
         }
+
+        if (CheckCollisionRecs(_player, *_obstacle))
+        {
+            ++(*_deathCount);
+            _player.x = 80.0f;
+            _player.y = static_cast<float>(_windowHeight) - 110.0f;
+        }
     }
 
     void App::Draw() const
@@ -97,7 +119,11 @@ namespace HardestGame
 
         // HUD text for tutorial guidance.
         DrawText("Move: WASD or Arrow Keys", 20, 20, 24, DARKGRAY);
-        DrawText("Lesson 1: basic movement only", 20, 52, 24, DARKGREEN);
+        DrawText("Lesson 2: obstacle exists", 20, 52, 24, DARKGREEN);
+
+        // Render obstacle
+        DrawRectangleRec(*_obstacle, RED);
+        DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 84, 24, MAROON);
     }
 
 }
