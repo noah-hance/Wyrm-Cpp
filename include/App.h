@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace HardestGame
+namespace WyrmCpp
 {
     // App groups game setup, update, and draw code in one class.
     // This keeps main.cpp very small and easy to understand.
@@ -27,6 +27,12 @@ namespace HardestGame
         // Called once each frame to draw the current game state.
         void Draw() const;
 
+        void Reset();
+        void Goal();
+        void NewGoalPosition();
+
+        int BoundedRand(int min, int max) const;
+
         // Window configuration we keep around for drawing and placement.
         int _windowWidth;
         int _windowHeight;
@@ -35,13 +41,19 @@ namespace HardestGame
         // Player square state.
         Rectangle _player;
 
+        // Goal square state.
+        Rectangle _target;
+
         // Basic movement setting used by Update().
         float _moveSpeed;
 
+        // Direction that the wyrm is heading in
+        Vector2 _moveDirection;
+
         // Count of deaths
         std::unique_ptr<int> _deathCount;
-
-        std::unique_ptr<Rectangle> _obstacle;
+        // Count of points
+        std::unique_ptr<int> _pointCount;
     };
 
 }

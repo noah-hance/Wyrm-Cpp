@@ -4,11 +4,11 @@ int main()
 {
     // `main` is where the program starts.
     // Keep this file tiny so all game behavior lives in App.cpp.
-    constexpr int windowWidth = 960;
-    constexpr int windowHeight = 540;
+    constexpr int windowWidth = 1005;
+    constexpr int windowHeight = 1005;
 
     // Create the app and pass window configuration.
-    HardestGame::App app(windowWidth, windowHeight, "World's Hardest Game Tutorial");
+    WyrmCpp::App app(windowWidth, windowHeight, "Wyrms Consumption");
 
     // Run the game loop.
     app.Run();

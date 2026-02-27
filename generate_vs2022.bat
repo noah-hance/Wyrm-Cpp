@@ -25,6 +25,6 @@ if errorlevel 1 (
 
 echo [2/2] Done.
 echo.
-echo Open "%BUILD_DIR%\WorldsHardestGameTutorial.sln" in Visual Studio.
+echo Open "%BUILD_DIR%\WyrmCpp.sln" in Visual Studio.
 
 endlocal

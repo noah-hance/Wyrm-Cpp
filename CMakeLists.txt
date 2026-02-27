@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Project metadata shown by IDEs and generated solutions.
-project(WorldsHardestGameTutorial
+project(WyrmCpp
     VERSION 0.1.0
     DESCRIPTION "Starter tutorial project: build a simple World's Hardest Game-inspired scene with raylib"
     LANGUAGES C CXX
@@ -38,18 +38,18 @@ if(NOT raylib_FOUND)
 endif()
 
 # The tutorial executable.
-add_executable(WorldsHardestGameTutorial
+add_executable(WyrmCpp
     src/main.cpp
     src/App.cpp
     include/App.h
 )
 
-target_include_directories(WorldsHardestGameTutorial
+target_include_directories(WyrmCpp
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(WorldsHardestGameTutorial
+target_link_libraries(WyrmCpp
     PRIVATE
         raylib
 )
@@ -62,4 +62,4 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
 )
 
 # Ensure Visual Studio opens this tutorial executable by default.
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT WorldsHardestGameTutorial)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT WyrmCpp)
