@@ -46,6 +46,8 @@ namespace WyrmCpp
 
         // Basic movement setting used by Update().
         float _moveSpeed;
+        // Basic timing setting used by Update().
+        float _actionTimeLength;
 
         // Direction that the wyrm is heading in
         Vector2 _moveDirection;
