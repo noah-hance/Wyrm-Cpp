@@ -11,11 +11,14 @@ namespace WyrmCpp
         , _windowHeight(windowHeight)
         , _windowTitle(windowTitle)
         // Rectangle is {x, y, width, height}.
-        , _player {static_cast<float>(windowWidth) / 2.0f + 2.5f, 5.0f, 20.0f, 20.0f}
-        , _moveSpeed(25.0f)
-        , _actionTimeLength(1.0 / 50.0)
+        , _player {static_cast<float>(windowWidth) / 2.0f + 1.0f, 87.5f, 20.0f, 20.0f}
+        , _playerPosition(Vector2 {18, 0})
+        , _moveSpeed(1)
         , _moveDirection(Vector2 {0, 0})
+        , _actionTimeLength(0.05)
         , _target {5.0f, 5.0f, 20.0f, 20.0f}
+        , _targetPosition(Vector2 {0, 0})
+        , _background {50.0f, 85.0f, 900.0f, 900.0f}
         , _pointCount(std::make_unique<int>(0))
         , _deathCount(std::make_unique<int>(0))
     {
@@ -38,16 +41,15 @@ namespace WyrmCpp
         Rectangle& player = _player;
         Rectangle& target = _target;
 
-        NewGoalPosition();
+        ResetBoard();
+        ChangeGoalPosition();
 
         // Main loop continues until the user closes the window.
         while (!WindowShouldClose())
         {
 
-            const float deltaTime = GetFrameTime();
-
             // Update game state first.
-            Update(deltaTime);
+            Update();
 
             // Start drawing this frame.
             BeginDrawing();
@@ -56,11 +58,11 @@ namespace WyrmCpp
             // Present the frame to the screen.
             EndDrawing();
 
-            WaitTime(0.05);
+            WaitTime(_actionTimeLength);
         }
     }
 
-    void App::Update(float deltaTime)
+    void App::Update()
     {
         // Movement: WASD and arrow keys are both supported.
         if ((IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) && _moveDirection.x == 0)
@@ -89,11 +91,11 @@ namespace WyrmCpp
             _moveDirection.y = 0;
         }
 
-        _player.x += _moveDirection.x * _moveSpeed;
-        _player.y += _moveDirection.y * _moveSpeed;
+        MovePlayer(_moveDirection);
 
         // Reset if player leaves bounds
-        if (_player.x < 5.0f || _player.x + _player.width > static_cast<float>(_windowWidth) - 5.0f
+        /*if (_player.x < 5.0f || _player.x + _player.width > static_cast<float>(_windowWidth)
+        - 5.0f
             || _player.y < 5.0f
             || _player.y + _player.height > static_cast<float>(_windowHeight) - 5.0f)
         {
@@ -103,7 +105,7 @@ namespace WyrmCpp
         if (CheckCollisionRecs(_player, _target))
         {
             Goal();
-        }
+        }*/
     }
 
     void App::Draw() const
@@ -111,46 +113,101 @@ namespace WyrmCpp
         // Clear the frame before drawing new content.
         ClearBackground(BLACK);
 
+        DrawRectangleRec(_background, GetColor(0x444444ff));
         // Draw player as a fully opaque green square.
         DrawRectangleRec(_player, GREEN);
         DrawRectangleRec(_target, YELLOW);
 
         // Render obstacle
         // DrawCircle(*_obstacle, YELLOW);
-        DrawText(TextFormat("Points: %d", *_pointCount), 20, 20, 24, GREEN);
-        DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 52, 24, MAROON);
+        DrawText(TextFormat("Points: %f", _player.x), 20, 20, 24, GREEN);
+        // DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 52, 24, MAROON);
+        DrawText(TextFormat("Deaths: %f", _player.y), 20, 52, 24, MAROON);
+    }
+
+    void App::MovePlayer(Vector2 movement)
+    {
+        Vector2 newPlayerPosition = Vector2 {
+            _playerPosition.x + _moveDirection.x * _moveSpeed,
+            _playerPosition.y + _moveDirection.y * _moveSpeed};
+
+        int moveStatus = SetBoardPlayerPosition(newPlayerPosition);
+        if (moveStatus < 0) // touched death
+        {
+            Reset();
+            return;
+        }
+        if (moveStatus > 0) // touched target
+        {
+            Goal();
+        }
+        _playerPosition = newPlayerPosition;
+        SetBoardPlayerPosition(_playerPosition);
+
+        _player.x = 53.5 + _playerPosition.x * 24.305555f;
+        _player.y = 87.5 + _playerPosition.y * 24.305555f;
     }
 
     void App::Reset()
     {
+        ResetBoard();
+        _playerPosition = Vector2 {18, 0};
         _moveDirection = Vector2 {0, 0};
+        MovePlayer(_moveDirection);
+
         ++(*_deathCount);
-        _player.x = static_cast<float>(_windowWidth) / 2.0f + 2.5f;
-        _player.y = 5.0f;
         *_pointCount = 0;
-        NewGoalPosition();
+        ChangeGoalPosition();
     }
 
     void App::Goal()
     {
         ++(*_pointCount);
-        NewGoalPosition();
+        ChangeGoalPosition();
     }
 
-    void App::NewGoalPosition()
+    void App::ChangeGoalPosition()
     {
-        //*_pointCount = BoundedRand(0, 200);
-        int x = BoundedRand(1, 196) * 5 - 2.5f; // from x=5 to x=1000, 5 points between
-        int y = BoundedRand(1, 196) * 5 - 2.5f; // from y=5 to y=1000, 5 points between
-        _target.x = x;
-        _target.y = y;
+        int prevBoardPosition = _boardDimension * _targetPosition.y + _targetPosition.x;
+        _board[prevBoardPosition] = 0;
+
+        int newGoalPositionX = BoundedRand(0, _boardDimension);
+        int newGoalPositionY = BoundedRand(0, _boardDimension);
+
+        int boardPosition = _boardDimension * newGoalPositionY + newGoalPositionX;
+        _board[boardPosition] = 1;
+
+        _target.x = 53.5f + newGoalPositionX * 24.305555f;
+        _target.y = 87.5f + newGoalPositionY * 24.305555f;
+    }
+
+    int App::SetBoardPlayerPosition(Vector2 position)
+    {
+        if (position.x < 0 || position.x > _boardDimension || position.y < 0
+            || position.y > _boardDimension)
+        {
+            return -1;
+        }
+        int boardPosition = _boardDimension * position.y + position.x;
+        int status = _board[boardPosition];
+
+        _board[boardPosition] = -1;
+        return status;
+    }
+
+    void App::ResetBoard()
+    {
+        for (int i = 0; i < _boardDimension * _boardDimension; i++)
+        {
+            _board[i] = 0;
+        }
     }
 
     int App::BoundedRand(int min, int max) const
     {
         if (max <= min)
             return -1;
-        return min + rand() % (max + 1);
+        return min + rand() % (max);
     }
 
 }
