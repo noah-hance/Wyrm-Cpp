@@ -42,6 +42,7 @@ namespace WyrmCpp
         Rectangle& target = _target;
 
         ResetBoard();
+        MovePlayer(Vector2 {0, 0});
         ChangeGoalPosition();
 
         // Main loop continues until the user closes the window.
@@ -91,38 +92,46 @@ namespace WyrmCpp
             _moveDirection.y = 0;
         }
 
-        MovePlayer(_moveDirection);
-
-        // Reset if player leaves bounds
-        /*if (_player.x < 5.0f || _player.x + _player.width > static_cast<float>(_windowWidth)
-        - 5.0f
-            || _player.y < 5.0f
-            || _player.y + _player.height > static_cast<float>(_windowHeight) - 5.0f)
+        if (_moveDirection.x == 0 && _moveDirection.y == 0)
         {
-            Reset();
+            return;
         }
 
-        if (CheckCollisionRecs(_player, _target))
-        {
-            Goal();
-        }*/
+        MovePlayer(_moveDirection);
     }
 
-    void App::Draw() const
+    void App::Draw()
     {
         // Clear the frame before drawing new content.
         ClearBackground(BLACK);
 
         DrawRectangleRec(_background, GetColor(0x444444ff));
-        // Draw player as a fully opaque green square.
-        DrawRectangleRec(_player, GREEN);
+        DrawWyrm();
         DrawRectangleRec(_target, YELLOW);
 
-        // Render obstacle
-        // DrawCircle(*_obstacle, YELLOW);
-        DrawText(TextFormat("Points: %f", _player.x), 20, 20, 24, GREEN);
-        // DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 52, 24, MAROON);
-        DrawText(TextFormat("Deaths: %f", _player.y), 20, 52, 24, MAROON);
+        DrawText(TextFormat("Points: %d", *_pointCount), 20, 20, 24, GREEN);
+        // DrawText(TextFormat("Points: %f", _playerPosition.x), 20, 20, 24, GREEN);
+        DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 52, 24, MAROON);
+        // DrawText(TextFormat("Deaths: %f", _playerPosition.y), 20, 52, 24, MAROON);
+    }
+
+    void App::DrawWyrm()
+    {
+        Color tailColor = Color {0, 228, 48, 155};
+        for (int i = 0; i < _boardDimension * _boardDimension; i++)
+        {
+            if (_board[i] == -1)
+            {
+                Rectangle wyrmSection = Rectangle {
+                    53.5f + (i % _boardDimension) * 24.305555f,
+                    87.5f + (i / _boardDimension) * 24.305555f,
+                    20.0f,
+                    20.0f};
+                // Draw player as a fully opaque green square.
+                DrawRectangleRec(wyrmSection, tailColor);
+            }
+        }
+        DrawRectangleRec(_player, GREEN);
     }
 
     void App::MovePlayer(Vector2 movement)
@@ -141,8 +150,8 @@ namespace WyrmCpp
         {
             Goal();
         }
+
         _playerPosition = newPlayerPosition;
-        SetBoardPlayerPosition(_playerPosition);
 
         _player.x = 53.5 + _playerPosition.x * 24.305555f;
         _player.y = 87.5 + _playerPosition.y * 24.305555f;
@@ -183,11 +192,12 @@ namespace WyrmCpp
 
     int App::SetBoardPlayerPosition(Vector2 position)
     {
-        if (position.x < 0 || position.x > _boardDimension || position.y < 0
-            || position.y > _boardDimension)
+        if (position.x < 0 || position.x >= _boardDimension || position.y < 0
+            || position.y >= _boardDimension)
         {
-            return -1;
+            return -2;
         }
+
         int boardPosition = _boardDimension * position.y + position.x;
         int status = _board[boardPosition];
 

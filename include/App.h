@@ -25,7 +25,8 @@ namespace WyrmCpp
         void Update();
 
         // Called once each frame to draw the current game state.
-        void Draw() const;
+        void Draw();
+        void DrawWyrm();
 
         void MovePlayer(Vector2 movement);
 
@@ -53,8 +54,8 @@ namespace WyrmCpp
         // background square state.
         Rectangle _background;
 
-        const int _boardDimension = 36;
-        int _board[36 * 36];
+        const int _boardDimension = 37;
+        int _board[37 * 37];
 
         // Basic movement setting used by Update().
         int _moveSpeed;
