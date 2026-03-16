@@ -1,6 +1,8 @@
 #include "App.h"
 #include <chrono>
 #include <ctime>
+#include <iostream>
+using namespace std;
 
 namespace WyrmCpp
 {
@@ -16,18 +18,21 @@ namespace WyrmCpp
         , _moveSpeed(1)
         , _moveDirection(Vector2 {0, 0})
         , _actionTimeLength(0.05)
+        , _tailLength(2)
+        , _tailStart {static_cast<int>(_boardDimension * _playerPosition.y + _playerPosition.x), _tailLength, nullptr}
         , _target {5.0f, 5.0f, 20.0f, 20.0f}
         , _targetPosition(Vector2 {0, 0})
+        , _board()
         , _background {50.0f, 85.0f, 900.0f, 900.0f}
         , _pointCount(std::make_unique<int>(0))
         , _deathCount(std::make_unique<int>(0))
+        , _maxPointCount(std::make_unique<int>(0))
     {
         // Open the window using the config passed from main().
         InitWindow(_windowWidth, _windowHeight, _windowTitle.c_str());
 
         // 60 FPS is a common beginner-friendly target.
         SetTargetFPS(60);
-        Vector2 itemPosition = Vector2 {static_cast<float>(windowHeight) - 120.0f, 50.0f};
     }
 
     // Destructor: required cleanup for raylib windows.
@@ -100,7 +105,7 @@ namespace WyrmCpp
         MovePlayer(_moveDirection);
     }
 
-    void App::Draw()
+    void App::Draw() const
     {
         // Clear the frame before drawing new content.
         ClearBackground(BLACK);
@@ -113,14 +118,22 @@ namespace WyrmCpp
         // DrawText(TextFormat("Points: %f", _playerPosition.x), 20, 20, 24, GREEN);
         DrawText(TextFormat("Deaths: %d", *_deathCount), 20, 52, 24, MAROON);
         // DrawText(TextFormat("Deaths: %f", _playerPosition.y), 20, 52, 24, MAROON);
+        DrawText(
+            TextFormat("Max points: %d", *_maxPointCount),
+            static_cast<float>(_windowWidth) - 200.0f,
+            20,
+            24,
+            GREEN);
+        // DrawText(TextFormat("Points: %f", _playerPosition.x), 20, 20, 24, GREEN);
     }
 
-    void App::DrawWyrm()
+    void App::DrawWyrm() const
     {
         Color tailColor = Color {0, 228, 48, 155};
         for (int i = 0; i < _boardDimension * _boardDimension; i++)
         {
-            if (_board[i] == -1)
+            int tailValue = _board[i];
+            if (tailValue < 0)
             {
                 Rectangle wyrmSection = Rectangle {
                     53.5f + (i % _boardDimension) * 24.305555f,
@@ -149,13 +162,18 @@ namespace WyrmCpp
         if (moveStatus > 0) // touched target
         {
             Goal();
+            // since goal reached, do not update any tail segments, just move to new player pos
         }
 
         _playerPosition = newPlayerPosition;
 
         _player.x = 53.5 + _playerPosition.x * 24.305555f;
         _player.y = 87.5 + _playerPosition.y * 24.305555f;
+
+        UpdateTail();
     }
+
+    void App::UpdateTail() {}
 
     void App::Reset()
     {
@@ -165,6 +183,10 @@ namespace WyrmCpp
         MovePlayer(_moveDirection);
 
         ++(*_deathCount);
+        if (*_maxPointCount < *_pointCount)
+        {
+            *_maxPointCount = *_pointCount;
+        }
         *_pointCount = 0;
         ChangeGoalPosition();
     }
@@ -172,7 +194,9 @@ namespace WyrmCpp
     void App::Goal()
     {
         ++(*_pointCount);
+        _tailLength++;
         ChangeGoalPosition();
+        cout << "Points: " << *_pointCount << endl;
     }
 
     void App::ChangeGoalPosition()
@@ -211,6 +235,20 @@ namespace WyrmCpp
         {
             _board[i] = 0;
         }
+        DeleteTail(_tailStart.next);
+        cout << "Tail: " << _tailStart.countdownValue << endl;
+        //*_tailSection = new TailSection*();
+        _tailLength = 2;
+    }
+
+    void App::DeleteTail(TailSection* ts)
+    {
+        if (ts == nullptr || ts->next == nullptr)
+        {
+            return;
+        }
+        DeleteTail(ts->next);
+        delete ts;
     }
 
     int App::BoundedRand(int min, int max) const
