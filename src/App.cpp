@@ -19,7 +19,7 @@ namespace WyrmCpp
         , _moveDirection(Vector2 {0, 0})
         , _actionTimeLength(0.05)
         , _tailLength(2)
-        , _tailStart {static_cast<int>(_boardDimension * _playerPosition.y + _playerPosition.x), _tailLength, nullptr}
+        , _tailStart()
         , _target {5.0f, 5.0f, 20.0f, 20.0f}
         , _targetPosition(Vector2 {0, 0})
         , _board()
@@ -27,6 +27,7 @@ namespace WyrmCpp
         , _pointCount(std::make_unique<int>(0))
         , _deathCount(std::make_unique<int>(0))
         , _maxPointCount(std::make_unique<int>(0))
+        , _stepsTaken(std::make_unique<int>(0))
     {
         // Open the window using the config passed from main().
         InitWindow(_windowWidth, _windowHeight, _windowTitle.c_str());
@@ -45,6 +46,10 @@ namespace WyrmCpp
     {
         Rectangle& player = _player;
         Rectangle& target = _target;
+
+        _tailStart = new TailSection(
+            ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y),
+            _tailLength);
 
         ResetBoard();
         MovePlayer(Vector2 {0, 0});
@@ -103,6 +108,7 @@ namespace WyrmCpp
         }
 
         MovePlayer(_moveDirection);
+        ++(*_stepsTaken);
     }
 
     void App::Draw() const
@@ -147,6 +153,15 @@ namespace WyrmCpp
         DrawRectangleRec(_player, GREEN);
     }
 
+    void App::SetPlayerPosition(Vector2 position)
+    {
+        _playerPosition.x = position.x;
+        _playerPosition.y = position.y;
+
+        _player.x = 53.5 + _playerPosition.x * 24.305555f;
+        _player.y = 87.5 + _playerPosition.y * 24.305555f;
+    }
+
     void App::MovePlayer(Vector2 movement)
     {
         Vector2 newPlayerPosition = Vector2 {
@@ -159,28 +174,55 @@ namespace WyrmCpp
             Reset();
             return;
         }
+
         if (moveStatus > 0) // touched target
         {
+            // since goal reached, only update tailStart position
             Goal();
-            // since goal reached, do not update any tail segments, just move to new player pos
+            TailSection* newSection = new TailSection(
+                ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y),
+                _tailLength);
+            newSection->next = _tailStart;
+
+            _tailStart = newSection;
+            PrintTail(_tailStart);
         }
-
-        _playerPosition = newPlayerPosition;
-
-        _player.x = 53.5 + _playerPosition.x * 24.305555f;
-        _player.y = 87.5 + _playerPosition.y * 24.305555f;
-
-        UpdateTail();
+        else
+        {
+            // UpdateTail();
+        }
     }
 
-    void App::UpdateTail() {}
+    void App::PrintTail(TailSection* start)
+    {
+        TailSection* ts = start;
+        while (ts != NULL)
+        {
+            cout << ts->position << ": ";
+            cout << ts->countdownValue << endl;
+            ts = ts->next;
+        }
+        cout << endl;
+    }
+
+    /*void App::UpdateTail()
+    {
+        TailSection ts = _tailStart;
+        cout << "tail: " << endl;
+
+        while (&ts != NULL)
+        {
+
+            ts = *ts.next;
+        }
+    }*/
 
     void App::Reset()
     {
         ResetBoard();
-        _playerPosition = Vector2 {18, 0};
+        SetPlayerPosition(Vector2 {18, 0});
+        _board[18] = -1 * _tailLength + 1; // resets position underneath spawn
         _moveDirection = Vector2 {0, 0};
-        MovePlayer(_moveDirection);
 
         ++(*_deathCount);
         if (*_maxPointCount < *_pointCount)
@@ -201,13 +243,14 @@ namespace WyrmCpp
 
     void App::ChangeGoalPosition()
     {
-        int prevBoardPosition = _boardDimension * _targetPosition.y + _targetPosition.x;
+        int prevBoardPosition =
+            ConvertPosition(_boardDimension, _targetPosition.x, _targetPosition.y);
         _board[prevBoardPosition] = 0;
 
         int newGoalPositionX = BoundedRand(0, _boardDimension);
         int newGoalPositionY = BoundedRand(0, _boardDimension);
 
-        int boardPosition = _boardDimension * newGoalPositionY + newGoalPositionX;
+        int boardPosition = ConvertPosition(_boardDimension, newGoalPositionX, newGoalPositionY);
         _board[boardPosition] = 1;
 
         _target.x = 53.5f + newGoalPositionX * 24.305555f;
@@ -221,29 +264,36 @@ namespace WyrmCpp
         {
             return -2;
         }
+        SetPlayerPosition(position);
 
-        int boardPosition = _boardDimension * position.y + position.x;
+        int boardPosition = ConvertPosition(_boardDimension, position.x, position.y);
         int status = _board[boardPosition];
 
-        _board[boardPosition] = -1;
+        _board[boardPosition] = -1 * _tailLength + 1;
         return status;
     }
 
     void App::ResetBoard()
     {
+        srand(*_deathCount * *_stepsTaken + 200); // set new seed based on movement and deaths
+
         for (int i = 0; i < _boardDimension * _boardDimension; i++)
         {
             _board[i] = 0;
         }
-        DeleteTail(_tailStart.next);
-        cout << "Tail: " << _tailStart.countdownValue << endl;
-        //*_tailSection = new TailSection*();
+        // DeleteTail(_tailStart->next);
+        //  cout << "Tail: " << _tailStart.countdownValue << endl;
+
         _tailLength = 2;
+        TailSection* newSection = new TailSection(
+            ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y),
+            _tailLength);
+        _tailStart = newSection;
     }
 
     void App::DeleteTail(TailSection* ts)
     {
-        if (ts == nullptr || ts->next == nullptr)
+        if (ts == NULL)
         {
             return;
         }
@@ -256,6 +306,11 @@ namespace WyrmCpp
         if (max <= min)
             return -1;
         return min + rand() % (max);
+    }
+
+    int App::ConvertPosition(int dimension, float x, float y) const
+    {
+        return _boardDimension * y + x;
     }
 
 }

@@ -8,18 +8,18 @@ namespace WyrmCpp
 {
     // TailSection is used to create a linkedlist of tail segments that disappear over time.
     // Could be done without, but this decreases process load significantly
-    struct TailSection
+    class TailSection
     {
       public:
         int position;
         int countdownValue;
-        struct TailSection* next;
+        TailSection* next;
 
-        TailSection(int pos, int startValue, TailSection* n)
+        TailSection(int pos, int startValue)
         {
             position = pos;
             countdownValue = startValue;
-            next = n;
+            next = NULL;
         }
     };
 
@@ -46,7 +46,9 @@ namespace WyrmCpp
         void DrawWyrm() const;
 
         void MovePlayer(Vector2 movement);
+        void SetPlayerPosition(Vector2 position);
         void UpdateTail();
+        void PrintTail(TailSection* start);
 
         void Reset();
         void Goal();
@@ -57,6 +59,7 @@ namespace WyrmCpp
         void DeleteTail(TailSection* ts);
 
         int BoundedRand(int min, int max) const;
+        int ConvertPosition(int dimention, float x, float y) const;
 
         // Window configuration we keep around for drawing and placement.
         int _windowWidth;
@@ -84,7 +87,7 @@ namespace WyrmCpp
 
         // Designates the extending tail of the Wyrm
         int _tailLength;
-        TailSection _tailStart;
+        TailSection* _tailStart;
 
         // Direction that the wyrm is heading in
         Vector2 _moveDirection;
@@ -95,6 +98,8 @@ namespace WyrmCpp
         std::unique_ptr<int> _pointCount;
         // Max count of points
         std::unique_ptr<int> _maxPointCount;
+        // Max units moved by wyrm
+        std::unique_ptr<int> _stepsTaken;
     };
 
 }
