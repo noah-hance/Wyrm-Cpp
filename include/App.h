@@ -60,6 +60,7 @@ namespace WyrmCpp
 
         int BoundedRand(int min, int max) const;
         int ConvertPosition(int dimention, float x, float y) const;
+        Vector2 ConvertPosition(int dimention, int pos) const;
 
         // Window configuration we keep around for drawing and placement.
         int _windowWidth;

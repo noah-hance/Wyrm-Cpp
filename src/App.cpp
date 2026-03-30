@@ -185,11 +185,11 @@ namespace WyrmCpp
             newSection->next = _tailStart;
 
             _tailStart = newSection;
-            PrintTail(_tailStart);
+            // PrintTail(_tailStart);
         }
         else
         {
-            // UpdateTail();
+            UpdateTail();
         }
     }
 
@@ -205,17 +205,40 @@ namespace WyrmCpp
         cout << endl;
     }
 
-    /*void App::UpdateTail()
+    void App::UpdateTail()
     {
-        TailSection ts = _tailStart;
-        cout << "tail: " << endl;
+        TailSection* ts = _tailStart;
+        // Vector2 tempPosition = ConvertPosition(_boardDimension, ts->position);
+        int position = ts->position;
+        int countdown = ts->countdownValue;
 
-        while (&ts != NULL)
+        ts = ts->next;
+        while (ts != NULL)
         {
+            int tempPosition = ts->position;
+            int tempCountdown = ts->countdownValue;
+            ts->position = position;
+            ts->countdownValue = countdown - 1;
+            position = tempPosition;
+            countdown = tempCountdown;
 
-            ts = *ts.next;
+            ts = ts->next;
         }
-    }*/
+
+        ts = _tailStart;
+        ts->countdownValue = _tailLength;
+        ts->position = ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y);
+
+        cout << "updated tail:" << endl;
+
+        while (ts != NULL)
+        {
+            cout << " (" << ts->position << "," << ts->countdownValue << ")";
+
+            ts = ts->next;
+        }
+        cout << endl;
+    }
 
     void App::Reset()
     {
@@ -281,7 +304,7 @@ namespace WyrmCpp
         {
             _board[i] = 0;
         }
-        // DeleteTail(_tailStart->next);
+        DeleteTail(_tailStart);
         //  cout << "Tail: " << _tailStart.countdownValue << endl;
 
         _tailLength = 2;
@@ -311,6 +334,13 @@ namespace WyrmCpp
     int App::ConvertPosition(int dimension, float x, float y) const
     {
         return _boardDimension * y + x;
+    }
+
+    Vector2 App::ConvertPosition(int dimension, int pos) const
+    {
+        int x = pos % dimension;
+        int y = pos / dimension;
+        return Vector2 {(float)x, (float)y};
     }
 
 }
