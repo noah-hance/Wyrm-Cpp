@@ -13,11 +13,12 @@ namespace WyrmCpp
         , _windowHeight(windowHeight)
         , _windowTitle(windowTitle)
         // Rectangle is {x, y, width, height}.
-        , _player {static_cast<float>(windowWidth) / 2.0f + 1.0f, 87.5f, 20.0f, 20.0f}
+        , _player()
         , _playerPosition(Vector2 {18, 0})
         , _moveSpeed(1)
         , _moveDirection(Vector2 {0, 0})
         , _actionTimeLength(0.05)
+        , _sectionSize(20.0f)
         , _tailLength(2)
         , _tailStart()
         , _target {5.0f, 5.0f, 20.0f, 20.0f}
@@ -44,15 +45,13 @@ namespace WyrmCpp
 
     void App::Run()
     {
+        _player =
+            {static_cast<float>(_windowWidth) / 2.0f + 1.0f, 87.5f, _sectionSize, _sectionSize};
         Rectangle& player = _player;
         Rectangle& target = _target;
 
-        _tailStart = new TailSection(
-            ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y),
-            _tailLength);
-
         ResetBoard();
-        MovePlayer(Vector2 {0, 0});
+        ResetPlayer();
         ChangeGoalPosition();
 
         // Main loop continues until the user closes the window.
@@ -136,23 +135,35 @@ namespace WyrmCpp
     void App::DrawWyrm() const
     {
         Color tailColor = Color {0, 228, 48, 155};
-        for (int i = 0; i < _boardDimension * _boardDimension; i++)
+        TailSection* tail = _tailStart;
+
+        while (tail != NULL)
         {
-            int tailValue = _board[i];
-            if (tailValue < 0)
-            {
-                Rectangle wyrmSection = Rectangle {
-                    53.5f + (i % _boardDimension) * 24.305555f,
-                    87.5f + (i / _boardDimension) * 24.305555f,
-                    20.0f,
-                    20.0f};
-                // Draw player as a fully opaque green square.
-                DrawRectangleRec(wyrmSection, tailColor);
-            }
+            int position = tail->position;
+            Rectangle wyrmSection = Rectangle {
+                53.5f + (position % _boardDimension) * 24.305555f,
+                87.5f + (position / _boardDimension) * 24.305555f,
+                _sectionSize,
+                _sectionSize};
+            DrawRectangleRec(wyrmSection, tailColor);
+
+            tail = tail->next;
         }
+
         DrawRectangleRec(_player, GREEN);
     }
 
+    void App::ResetPlayer()
+    {
+        _tailStart = new TailSection(
+            ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y),
+            _tailLength);
+
+        SetPlayerPosition(Vector2 {18, 0});
+        MovePlayer(Vector2 {0, 0});
+
+        cout << endl << "Position reset" << endl;
+    }
     void App::SetPlayerPosition(Vector2 position)
     {
         _playerPosition.x = position.x;
@@ -196,10 +207,10 @@ namespace WyrmCpp
     void App::PrintTail(TailSection* start)
     {
         TailSection* ts = start;
+        cout << "tail:" << endl;
         while (ts != NULL)
         {
-            cout << ts->position << ": ";
-            cout << ts->countdownValue << endl;
+            cout << " (" << ts->position << "," << ts->countdownValue << ")";
             ts = ts->next;
         }
         cout << endl;
@@ -208,7 +219,6 @@ namespace WyrmCpp
     void App::UpdateTail()
     {
         TailSection* ts = _tailStart;
-        // Vector2 tempPosition = ConvertPosition(_boardDimension, ts->position);
         int position = ts->position;
         int countdown = ts->countdownValue;
 
@@ -224,27 +234,17 @@ namespace WyrmCpp
 
             ts = ts->next;
         }
+        _board[position] = 0; // reset board at position where tail was but is no longer
 
         ts = _tailStart;
         ts->countdownValue = _tailLength;
         ts->position = ConvertPosition(_boardDimension, _playerPosition.x, _playerPosition.y);
-
-        cout << "updated tail:" << endl;
-
-        while (ts != NULL)
-        {
-            cout << " (" << ts->position << "," << ts->countdownValue << ")";
-
-            ts = ts->next;
-        }
-        cout << endl;
+        // PrintTail(_tailStart);
     }
 
     void App::Reset()
     {
         ResetBoard();
-        SetPlayerPosition(Vector2 {18, 0});
-        _board[18] = -1 * _tailLength + 1; // resets position underneath spawn
         _moveDirection = Vector2 {0, 0};
 
         ++(*_deathCount);
@@ -254,6 +254,7 @@ namespace WyrmCpp
         }
         *_pointCount = 0;
         ChangeGoalPosition();
+        ResetPlayer();
     }
 
     void App::Goal()
@@ -261,7 +262,6 @@ namespace WyrmCpp
         ++(*_pointCount);
         _tailLength++;
         ChangeGoalPosition();
-        cout << "Points: " << *_pointCount << endl;
     }
 
     void App::ChangeGoalPosition()
@@ -305,7 +305,6 @@ namespace WyrmCpp
             _board[i] = 0;
         }
         DeleteTail(_tailStart);
-        //  cout << "Tail: " << _tailStart.countdownValue << endl;
 
         _tailLength = 2;
         TailSection* newSection = new TailSection(

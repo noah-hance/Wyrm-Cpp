@@ -45,6 +45,7 @@ namespace WyrmCpp
         void Draw() const;
         void DrawWyrm() const;
 
+        void ResetPlayer();
         void MovePlayer(Vector2 movement);
         void SetPlayerPosition(Vector2 position);
         void UpdateTail();
@@ -87,6 +88,7 @@ namespace WyrmCpp
         double _actionTimeLength;
 
         // Designates the extending tail of the Wyrm
+        float _sectionSize;
         int _tailLength;
         TailSection* _tailStart;
 
